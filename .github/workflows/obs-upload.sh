@@ -53,6 +53,9 @@ cat > _service << EOF
         <param name="url">https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.xz</param>
     </service>
     <service name="download_url">
+        <param name="url">https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-armv7l.tar.xz</param>
+    </service>
+    <service name="download_url">
         <param name="url">https://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-arm64.tar.xz</param>
     </service>
     <service name="download_url">
@@ -92,11 +95,18 @@ EOF
 cat > build.script << EOF
 export LANG=C.UTF-8
 
+JOBS="\${DEB_BUILD_OPTIONS#*=}"
+case "\$(uname -m)" in
+aarch64) DEB_BUILD_OPTIONS="parallel=\$(("\$JOBS" / 2))" ;;
+esac
+JOBS=
+
 tar -x -f ../SOURCES/ungoogled-chromium.tar.xz
 mkdir -p debian/download_cache
 ln -s ../../../SOURCES/chromium-$UC_VERSION.tar.xz debian/download_cache/chromium-$UC_VERSION.tar.xz
 ln -s ../../../SOURCES/chromium-$UC_VERSION.tar.xz.hashes debian/download_cache/chromium-$UC_VERSION.tar.xz.hashes
 ln -s ../../../SOURCES/node-$NODE_VERSION-linux-x64.tar.xz debian/download_cache/node-$NODE_VERSION-linux-x64.tar.xz
+ln -s ../../../SOURCES/node-$NODE_VERSION-linux-armv7l.tar.xz debian/download_cache/node-$NODE_VERSION-linux-armv7l.tar.xz
 ln -s ../../../SOURCES/node-$NODE_VERSION-linux-arm64.tar.xz debian/download_cache/node-$NODE_VERSION-linux-arm64.tar.xz
 ln -s ../../../SOURCES/node-$NODE_VERSION.sha256sum debian/download_cache/node-$NODE_VERSION.sha256sum
 
