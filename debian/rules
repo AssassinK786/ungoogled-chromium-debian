@@ -10,16 +10,15 @@ UP_DIR   := $(UC_DIR)/patches
 DL_CACHE := $(DB_DIR)/download_cache
 DS_CACHE := $(DB_DIR)/domsubcache.tar.gz
 OUT_DIR  := out/Release
-GN       := $(OUT_DIR)/gn
 
 # Changelog and control template variables
 VERSION  := $(file < $(UC_DIR)/chromium_version.txt)-1
-RELEASE  := bullseye
+RELEASE  := jammy
 AUTHOR   := ungoogled-chromium Maintainers <github@null.invalid>
 DATETIME := $(shell date -R)
 
 # Assign the clang toolchain to use
-LLVM_VERSION ?= 13
+LLVM_VERSION ?= 14
 export AR    := llvm-ar-$(LLVM_VERSION)
 export NM    := llvm-nm-$(LLVM_VERSION)
 export CC    := clang-$(LLVM_VERSION)
@@ -29,7 +28,8 @@ export CXX   := clang++-$(LLVM_VERSION)
 export DEB_BUILD_MAINT_OPTIONS  := hardening=+all optimize=-lto
 export DEB_CXXFLAGS_MAINT_STRIP := -g
 export CXXFLAGS                 := $(shell dpkg-buildflags --get CXXFLAGS) \
-                                   -Wno-unknown-warning-option
+                                   -Wno-unknown-warning-option             \
+                                   -Wno-deprecated-declarations
 export CFLAGS                   := $(CXXFLAGS)
 
 # Use parallel jobs if requested
@@ -77,9 +77,8 @@ GN_FLAGS +=                                                           \
         use_kerberos=false                                            \
         use_cups=true                                                 \
         v8_enable_backtrace=true                                      \
-        use_cxx17=true                                                \
 
-# Currently omitted from base (bullseye): icu, harfbuzz-ng, ffmpeg, openh264, libvpx
+# Currently omitted from base (jammy): icu, harfbuzz-ng, ffmpeg, openh264, libvpx
 SYS_LIBS :=         \
         flac        \
         fontconfig  \
@@ -133,20 +132,16 @@ setup: changelog control download
 	tar -C third_party/node/linux -xf $(DL_CACHE)/node-$(NODE_VERSION)-linux-armv7l.tar.xz --transform=s/^node-$(NODE_VERSION)-linux-armv7l/node-linux-armv7l/
 	tar -C third_party/node/linux -xf $(DL_CACHE)/node-$(NODE_VERSION)-linux-arm64.tar.xz --transform=s/^node-$(NODE_VERSION)-linux-arm64/node-linux-arm64/
 
-$(GN):
-	# Switch to distribution GN once generate-ninja has widespread availability
-	tools/gn/bootstrap/bootstrap.py -j $(JOBS) --skip-generate-buildfiles
-
 override_dh_auto_configure:
 	$(UL_DIR)/patches.py apply $(RT_DIR) $(UP_DIR)
 	$(UL_DIR)/domain_substitution.py apply -r $(UC_DIR)/domain_regex.list -f $(UC_DIR)/domain_substitution.list -c $(DS_CACHE) $(RT_DIR)
 	cp $(SH_DIR)/jsoncpp.gn build/linux/unbundle
 	build/linux/unbundle/replace_gn_files.py --system-libraries $(SYS_LIBS)
 
-override_dh_auto_build: $(GN)
-	$(GN) gen $(OUT_DIR) --args="$(GN_FLAGS)" --fail-on-unused-args
+override_dh_auto_build:
+	gn gen $(OUT_DIR) --args="$(GN_FLAGS)" --fail-on-unused-args
 	ninja -j $(JOBS) -C $(OUT_DIR) chrome chrome_sandbox chromedriver
-	make -C $(CL_DIR) CFLAGS="$(CFLAGS) -g -pie -fPIE" CHROMIUM_BINARY=/usr/lib/chromium/chrome chromium
+	make -C $(CL_DIR) CFLAGS="$(CFLAGS) -pie -fPIE" CHROMIUM_BINARY=/usr/lib/chromium/chrome chromium
 
 override_dh_prep:
 	for file in `find -name "*.gn.orig" -o -name "*.gni.orig"`; do mv $$file $${file%.orig}; done

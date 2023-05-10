@@ -1,49 +1,35 @@
-# ungoogled-chromium-debian (unmaintained)
-
-The debian packaging is currently maintained but version will behind the current ungoogled-chromium version.
-
----
+# ungoogled-chromium-debian
 
 This repository contains files to build Debian packages of
 [ungoogled-chromium](//github.com/Eloston/ungoogled-chromium).
 
 These are the new unified packaging files which are designed to be built
 directly from the git repository and serve as a single set of packaging
-files for all Debian or Ubuntu releases newer than the currently oldest
-supported release, `Bullseye`.
+files for all Debian or Ubuntu releases newer than and including the
+currently oldest supported release, `Jammy`.
 
 Even so we will only be supporting a subset of the available distributions.
 These are currently:
-- Debian Bullseye
 - Debian Sid
+- Ubuntu Jammy
+- Ubuntu Lunar
 
-The only guarantee we will make for support longevity is as follows:
-- Debian stable releases will be supported at least until the next stable release is available.
-- Ubuntu LTS releases will be supported at least until the next LTS release is available.
-- Ubuntu regular releases will be supported until their normal EOL with Ubuntu upstream.
-
-The actual time we decide to drop support for a release after these windows
-have elapsed will depend on what we have to gain from doing so. Examples of
-reasons we may drop a release include: upgrading to a newer toolchain and
-reintroduction of system libraries.
+All releases shall be supported on a best-effort basis. `x86_64` is the only
+architecture we can be reliably test so any other architectures will only be
+guaranteed to be buildable at best. Older releases may be dropped at any time
+if they are too difficult to continue to support due to how bleeding edge
+Chromium tends to be.
 
 ## Getting OBS packages
 
-Use the following instructions to setup your system for our OBS repositories. Make sure to use the one for the correct distribution release for your installation.
-- Debian Bullseye
-  ```sh
-  # echo 'deb http://download.opensuse.org/repositories/home:/ungoogled_chromium/Debian_Bullseye/ /' | sudo tee /etc/apt/sources.list.d/home-ungoogled_chromium.list > /dev/null
-  # curl -s 'https://download.opensuse.org/repositories/home:/ungoogled_chromium/Debian_Bullseye/Release.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home-ungoogled_chromium.gpg > /dev/null
-  # sudo apt update
-  # sudo apt install -y ungoogled-chromium
-  ```
-- Debian Sid
-  ```sh
-  # echo 'deb http://download.opensuse.org/repositories/home:/ungoogled_chromium/Debian_Sid/ /' | sudo tee /etc/apt/sources.list.d/home-ungoogled_chromium.list > /dev/null
-  # curl -s 'https://download.opensuse.org/repositories/home:/ungoogled_chromium/Debian_Sid/Release.key' | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/home-ungoogled_chromium.gpg > /dev/null
-  # sudo apt update
-  # sudo apt install -y ungoogled-chromium
-  ```
+We now defer to here:
+[OBS Setup Instructions](https://software.opensuse.org//download.html?project=home%3Aungoogled_chromium&package=ungoogled-chromium)
+
+Also note, if you have added the repository previously, you may eventually
+get errors about expired keys. This is due to how OBS generates repository
+keys and we have no known way to control it. At present the only known
+solution is to redo the steps for adding the repository key as OBS does
+regenerate it eventually with a new expiration date.
 
 ## Building a binary package
 
